@@ -1,0 +1,15 @@
+This is a relatively complete public release of my personal salt states.
+
+The states presented here are using for running this network:
+    https://imgur.com/a/S63X1Bv
+
+This repository includes a lot of neat tricks I've learned and shows off
+many salt best practices (bad practices are bugs). It also includes some
+components that will be eventually be described on my personal blog [1],
+such as IDI (Inventory Defined Infrastructure) [2] and automated
+highstates [3].
+
+[1] https://michael.lustfield.net
+[2] Define a machine in DCIM/IPAM, (if physical, turn on), wait for an
+    email confirming complete configuration.
+[3] Push to a git repo, wait for systems to run a highstate.

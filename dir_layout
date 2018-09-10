@@ -1,0 +1,257 @@
+# A partial listing of what my home salt structure looks like.
+# It's worked well in large corporations and seemed like something worth sharing.
+# If using environments, then keep salt-states:top.sls in a separate repository.
+
+salt-states
+├── _grains
+│   └── public_ip.py
+├── _modules
+│   └── readme
+├── _orchestrate
+│   └── global_highstate.sls
+├── _reactor
+│   └── minion_request.sls
+├── readme
+│   ├── itel.rst
+│   └── snap.rst
+├── sys
+│   ├── cron
+│   │   ├── acmetool.sls
+│   │   ├── minecraft.sls
+│   │   ├── rsnapshot.sls
+│   │   ├── snap.sls
+│   │   └── syslog.sls
+│   ├── files
+│   │   ├── apt.sls
+│   │   ├── gai.sls
+│   │   ├── pam.sls
+│   │   ├── tzdata.sls
+│   │   └── uwsgi_webapps.sls
+│   ├── pkgs
+│   │   ├── acmetool.sls
+│   │   ├── acng.sls
+│   │   ├── base.sls
+│   │   ├── elasticsearch.sls
+│   │   ├── ferm.sls
+│   │   ├── gauth.sls
+│   │   ├── git-client.sls
+│   │   ├── glacier.sls
+│   │   ├── gogs.sls
+│   │   ├── inalert-master.sls
+│   │   ├── inalert.sls
+│   │   ├── kibana.sls
+│   │   ├── logcheck.sls
+│   │   ├── logstash.sls
+│   │   ├── mifi.sls
+│   │   ├── minecraft.conf
+│   │   ├── nginx.sls
+│   │   ├── ntp.sls
+│   │   ├── openvpn.sls
+│   │   ├── pip-client.sls
+│   │   ├── proxmox.sls
+│   │   ├── redis.sls
+│   │   ├── reprepro.sls
+│   │   ├── rsnapshot.sls
+│   │   ├── salt-cloud.sls
+│   │   ├── salt-master.sls
+│   │   ├── salt.sls
+│   │   ├── snap.sls
+│   │   ├── sphinxsearch.sls
+│   │   ├── sshguard.sls
+│   │   ├── ssh.sls
+│   │   ├── ssmtp.sls
+│   │   ├── sudo.sls
+│   │   ├── syslog.sls
+│   │   ├── tftpd.sls
+│   │   ├── ubiquiti.sls
+│   │   ├── udev.sls
+│   │   └── uwsgi.sls
+│   ├── remotes
+│   │   ├── git.sls
+│   │   └── init.sls
+│   ├── schedules
+│   │   └── global_highstate.sls
+│   ├── users
+│   │   ├── gogs.sls
+│   │   ├── inalert.sls
+│   │   ├── init.sls
+│   │   ├── kibana.sls
+│   │   ├── minecraft.sls
+│   │   ├── rsnapshot.sls
+│   │   └── www-data.sls
+│   └── webapps
+│       └── mlustfield.sls
+└── top.sls
+
+salt-data
+├── etc
+│   ├── apt
+│   │   └── keys
+│   │       ├── 9887F95A.pub
+│   │       ├── C0A52C50.pub
+│   │       ├── D88E42B4.pub
+│   │       ├── DE57BFBE.pub
+│   │       ├── EA0C2506.pub
+│   │       ├── EDB58DFA.pub
+│   │       └── README
+│   ├── apt-cacher-ng
+│   │   └── security.conf
+│   ├── chrony
+│   │   └── chrony.conf
+│   ├── cron.d
+│   │   └── run_rsnapshot
+│   ├── ferm
+│   │   └── ferm.conf
+│   ├── inalert.ini
+│   ├── logcheck
+│   │   ├── ignore.d.server
+│   │   │   └── mtrules
+│   │   └── logcheck.conf
+│   ├── logstash
+│   │   ├── conf.d
+│   │   │   └── itel.conf
+│   │   ├── patterns
+│   │   │   └── itel
+│   │   └── templates
+│   │       └── itel.json
+│   ├── msm.conf
+│   ├── nginx
+│   │   └── conf.d
+│   │       ├── apt.conf
+│   │       ├── contact-form.conf
+│   │       ├── git.conf
+│   │       ├── inalert-api.conf
+│   │       ├── ip-service.conf
+│   │       ├── itel.conf
+│   │       ├── mlustfield-site.conf
+│   │       ├── ngxpbin.conf
+│   │       ├── paste-service.conf
+│   │       └── pxeboot.conf
+│   ├── openvpn
+│   │   ├── client.jinja
+│   │   ├── server.jinja
+│   │   └── update-resolv
+│   ├── pam.d
+│   │   ├── sshd
+│   │   ├── su
+│   │   └── sudo
+│   ├── rsnapshot.conf
+│   ├── rsyslog
+│   │   ├── hosts.conf
+│   │   └── log.conf
+│   ├── salt
+│   │   ├── cloud.conf.d
+│   │   │   ├── main.conf
+│   │   │   └── minion.conf
+│   │   ├── cloud.deploy.d
+│   │   │   └── ovpn_deploy
+│   │   ├── master.d
+│   │   │   ├── main.conf
+│   │   │   ├── main.conf%%endsalt
+│   │   │   ├── options.conf
+│   │   │   ├── reactor.conf
+│   │   │   ├── reactor.conf%%endsalt
+│   │   │   └── sdb.conf
+│   │   └── minion.d
+│   │       └── main.conf
+│   ├── snap.exclude
+│   ├── sphinxsearch
+│   │   └── sphinx.conf%%pubweb
+│   ├── ssh
+│   │   └── sshd_config
+│   ├── ssmtp
+│   │   └── ssmtp.conf
+│   ├── sudoers
+│   ├── sudoers.d
+│   │   ├── api-mlustfield
+│   │   └── gogs
+│   ├── udev
+│   │   └── rules.d
+│   │       └── 99-vzw-620l.rules
+│   └── uwsgi
+│       └── apps-available
+│           ├── contact-form.ini
+│           ├── inalert-api.ini
+│           ├── mlustfield-search.ini
+│           └── ngxpbin.ini
+└── usr
+    └── local
+        └── sbin
+            ├── api-mlustfield
+            ├── git-saltevent
+            ├── glacier.jar
+            ├── global_highstate
+            ├── inalert-daemon
+            ├── inalert-redis
+            ├── inalert-send
+            ├── snap
+            └── upload_backup
+
+salt-pillar
+├── cloud
+│   ├── init.sls
+│   ├── access_tokens.sls
+│   ├── nodes.sls
+│   ├── profiles
+│   │   ├── init.sls
+│   │   ├── digitalocean.sls
+│   │   └── proxmox.sls
+│   └── providers
+│       ├── init.sls
+│       ├── digitalocean.sls
+│       └── proxmox.sls
+├── keys
+│   ├── 03A8891A765AD085.key
+│   ├── 03A8891A765AD085.pub
+│   ├── D45F2AB7AF5E2BF8.pub
+│   ├── index.sls
+│   ├── saltkeys.tgz.gpg
+│   └── snapkeys.tgz.gpg
+├── sys
+│   ├── base
+│   │   ├── apt.sls
+│   │   ├── firewall.sls
+│   │   ├── portknocking
+│   │   │   ├── init.sls
+│   │   │   ├── somehost.domain.tld.sls
+│   │   │   └── somehost.domain.tld.sls
+│   │   ├── snap.sls
+│   │   ├── sudo.sls
+│   │   ├── syslog.sls
+│   │   └── tzdata.sls
+│   ├── certs
+│   │   ├── dhparam.sls
+│   │   └── mlustfield.sls
+│   ├── pkgs
+│   │   ├── acmetool.sls
+│   │   ├── acng.sls
+│   │   ├── elasticsearch.sls
+│   │   ├── logstash.sls
+│   │   ├── salt-cloud.sls
+│   │   ├── salt.sls
+│   │   ├── sphinxsearch.sls
+│   │   ├── tftpd.sls
+│   │   ├── udev.sls
+│   │   └── versions.sls
+│   ├── remotes
+│   │   └── init.sls
+│   ├── services
+│   │   ├── glacier.sls
+│   │   └── inalert.sls
+│   ├── users
+│   │   ├── init.sls
+│   │   ├── root.sls
+│   │   ├── ssh_keys.sls
+│   │   └── ssmtp.sls
+│   ├── vpn
+│   │   ├── groups
+│   │   │   └── do_464.sls
+│   │   ├── hosts
+│   │   │   ├── somehost.domain.tld.sls
+│   │   │   ├── somehost.domain.tld.sls
+│   │   │   ├── somehost.domain.tld.sls
+│   │   │   └── do_464.sls
+│   │   └── init.sls
+│   └── websites
+│       └── init.sls
+└── top.sls
