@@ -1,0 +1,3 @@
+{% from 'sys/pkgs/glacier/defaults.sls' import conf with context -%}
+credentials=/root/.glacier_creds
+endpoint=https://glacier.{{ conf['aws_region'] }}.amazonaws.com

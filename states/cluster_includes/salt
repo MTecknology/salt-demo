@@ -1,0 +1,3 @@
+- sys.cron.salt-master
+- sys.pkgs.salt-master
+- sys.pkgs.salt-cloud

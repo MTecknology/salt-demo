@@ -1,0 +1,4 @@
+- sys.pkgs.salt-cloud.netbox
+- sys.pkgs.nginx
+- sys.pkgs.nginx.loadbalancer
+- sys.pkgs.keepalived

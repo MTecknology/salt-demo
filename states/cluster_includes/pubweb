@@ -1,0 +1,9 @@
+- sys.pkgs.acmetool
+- sys.pkgs.gauth
+- sys.remotes
+- sys.pkgs.git-client
+- sys.pkgs.pip-client
+- sys.pkgs.sphinxsearch
+- sys.pkgs.uwsgi
+- sys.pkgs.nginx
+- sys.webapps.mlustfield

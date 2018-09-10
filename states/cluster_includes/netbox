@@ -1,0 +1,5 @@
+- sys.pkgs.nginx
+- sys.pkgs.postgresql
+- sys.pkgs.uwsgi
+- sys.pkgs.virtualenv
+- sys.remotes

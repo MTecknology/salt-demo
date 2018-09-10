@@ -1,0 +1,106 @@
+{% from 'sys/pkgs/glacier/defaults.sls' import conf with context -%}
+#!/bin/bash
+##
+# Uploads an ecrypted archive of local backups to AWS Glacier
+# Depends: java jre
+#
+# To restore:
+#   # Locate encrypted copy of ~/.gnupg (contains the private key)
+#   gpg --output /tmp/snap-<date>.sqfs /tmp/snap-<date>.crypt
+#   # Enter gpg password
+#   TODO: mount the squashfs image
+##
+
+dt="$(date '+%F')"
+
+
+##
+# Helper Functions
+##
+
+show_msg() {
+	printf '*** %s ***\n' "$@"
+}
+
+die() {
+	show_msg "$1"
+	remove_files
+	release_lock
+	if [[ "$2" ]]; then
+		exit "$2"
+	else
+		exit 99
+	fi
+}
+
+
+##
+# Main processing
+##
+
+main() {
+	check_lock      || die '/run/snap_upload.lock exists; not running backup'
+	acquire_lock    || die 'Unable to acquire lock; backup not running'
+	create_archive  || die 'Unable to create squashfs image; backup failed'
+	encrypt_archive || die 'Unable to encrypt archive; backup failed'
+	upload_archive  || die 'Unable to upload archive to glacier; backup failed'
+	remove_files    || show_msg 'Unable to delete old files; backup succeeded'
+	release_lock    || show_msg 'Unable to release lock; backup succeeded'
+}
+
+##
+# Archive Functions
+##
+
+create_archive() {
+	mksquashfs '/var/rsnapshot' "/tmp/snap-${dt}.sqfs" \
+		-comp gzip -b 32768 -no-progress 2>/dev/null; ret="$?"
+	return "$ret"
+}
+
+encrypt_archive() {
+	gpg --output "/tmp/snap-${dt}.crypt" \
+		--encrypt --recipient '{{ conf['encrypt_recipient'] }}' \
+		--batch "/tmp/snap-${dt}.sqfs"; ret="$?"
+	return "$ret"
+}
+
+upload_archive() {
+	java -jar '/usr/local/sbin/glacier.jar' \
+		--credentials '/root/.glacier_creds' \
+		--endpoint 'https://glacier.{{ pillar["glacier"]["aws_region"] }}.amazonaws.com' \
+		--multipartupload "/tmp/snap-${dt}.crypt" \
+		--partsize '134217728' \
+		--vault 'snap'; ret="$?"
+	return "$ret"
+}
+
+remove_files() {
+	rm -f "/tmp/snap-${dt}.sqfs" || show_msg "Unable to remove /tmp/snap-${dt}.sqfs"
+	rm -f "/tmp/snap-${dt}.crypt" || show_msg "Unable to remove /tmp/snap-${dt}.crypt"
+}
+
+
+##
+# Lock Management
+##
+
+check_lock() {
+	test -f '/run/snap_upload.lock' && return 1
+	return 0
+}
+
+acquire_lock() {
+	test -f '/run/snap_upload.lock' && return 1
+	touch '/run/snap_upload.lock'
+}
+
+release_lock() {
+	rm -f '/run/snap_upload.lock'
+}
+
+##
+# Launch Script
+##
+
+main

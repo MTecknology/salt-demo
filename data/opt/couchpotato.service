@@ -1,0 +1,12 @@
+[Unit]
+Description=CouchPotato application instance
+After=network.target
+
+[Service]
+ExecStart=/opt/couchpotato/CouchPotato.py
+Type=simple
+User=plex
+Group=plex
+
+[Install]
+WantedBy=multi-user.target

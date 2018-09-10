@@ -1,0 +1,144 @@
+#!/bin/bash
+##
+# Cloud deploy script to bring up a server and get it configured
+#   - salt-minion must be the latest version before highstate runs
+#   - minion keys must be in place before installing salt-minion
+##
+
+# Show commands being executed
+set -x
+
+
+##
+# Prep Stuff
+##
+
+# Stick salt in the repo list to get the latest 'n greatest
+# Use debian repos because the DO mirrors are terrible
+# This gets overwritten when highstate executes
+cat >/etc/apt/sources.list <<EOF
+[...]
+EOF
+
+echo '-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: GnuPG v2
+
+mQENBFOpvpgBCADkP656H41i8fpplEEB8IeLhugyC2rTEwwSclb8tQNYtUiGdna9
+m38kb0OS2DDrEdtdQb2hWCnswxaAkUunb2qq18vd3dBvlnI+C4/xu5ksZZkRj+fW
+tArNR18V+2jkwcG26m8AxIrT+m4M6/bgnSfHTBtT5adNfVcTHqiT1JtCbQcXmwVw
+WbqS6v/LhcsBE//SHne4uBCK/GHxZHhQ5jz5h+3vWeV4gvxS3Xu6v1IlIpLDwUts
+kT1DumfynYnnZmWTGc6SYyIFXTPJLtnoWDb9OBdWgZxXfHEcBsKGha+bXO+m2tHA
+gNneN9i5f8oNxo5njrL8jkCckOpNpng18BKXABEBAAG0MlNhbHRTdGFjayBQYWNr
+YWdpbmcgVGVhbSA8cGFja2FnaW5nQHNhbHRzdGFjay5jb20+iQE4BBMBAgAiBQJT
+qb6YAhsDBgsJCAcDAgYVCAIJCgsEFgIDAQIeAQIXgAAKCRAOCKFJ3le/vhkqB/0Q
+WzELZf4d87WApzolLG+zpsJKtt/ueXL1W1KA7JILhXB1uyvVORt8uA9FjmE083o1
+yE66wCya7V8hjNn2lkLXboOUd1UTErlRg1GYbIt++VPscTxHxwpjDGxDB1/fiX2o
+nK5SEpuj4IeIPJVE/uLNAwZyfX8DArLVJ5h8lknwiHlQLGlnOu9ulEAejwAKt9CU
+9oNR31KvrkSNrFbA3D89uQENBFOpvpgBCADJ79iH10AfAfpTBEQwa6vzUI3Eltqb
+9aZ0xbZV8V/8pnuU7rqM7Z+nJgldibFk4gFG2bHCG1C5aEH/FmcOMvTKDhJSFQUx
+uhgxttMArXm2c22OSy1hpsnVG68G32Nag/QFEJ++3hNnbyGZpHnPiYgej3FrerQJ
+zv456wIsxRDMvJ1NZQB3twoCqwapC6FJE2hukSdWB5yCYpWlZJXBKzlYz/gwD/Fr
+GL578WrLhKw3UvnJmlpqQaDKwmV2s7MsoZogC6wkHE92kGPG2GmoRD3ALjmCvN1E
+PsIsQGnwpcXsRpYVCoW7e2nW4wUf7IkFZ94yOCmUq6WreWI4NggRcFC5ABEBAAGJ
+AR8EGAECAAkFAlOpvpgCGwwACgkQDgihSd5Xv74/NggA08kEdBkiWWwJZUZEy7cK
+WWcgjnRuOHd4rPeT+vQbOWGu6x4bxuVf9aTiYkf7ZjVF2lPn97EXOEGFWPZeZbH4
+vdRFH9jMtP+rrLt6+3c9j0M8SIJYwBL1+CNpEC/BuHj/Ra/cmnG5ZNhYebm76h5f
+T9iPW9fFww36FzFka4VPlvA4oB7ebBtquFg3sdQNU/MmTVV4jPFWXxh4oRDDR+8N
+1bcPnbB11b5ary99F/mqr7RgQ+YFF0uKRE3SKa7a+6cIuHEZ7Za+zhPaQlzAOZlx
+fuBmScum8uQTrEF5+Um5zkwC7EXTdH1co/+/V/fpOtxIg4XO4kcugZefVm5ERfVS
+MA==
+=dtMN
+-----END PGP PUBLIC KEY BLOCK-----' | apt-key add -
+apt-get update
+
+# Remove cruft from default template
+apt-get purge -y aptitude aptitude-doc-en apt-listchanges arping bash-completion bc \
+	busybox bzip2 cloud-init cloud-initramfs-growroot cloud-utils console-setup \
+	console-setup-linux curl dc debconf-i18n debconf-utils debian-faq dh-python \
+	dictionaries-common distro-info distro-info-data dnsutils doc-debian \
+	docutils-common docutils-doc easy-rsa eject emacsen-common euca2ools \
+	exim4 exim4-base exim4-config exim4-daemon-light file fontconfig \
+	fontconfig-config fonts-dejavu-core ftp geoip-database gnupg2 gnupg-agent \
+	groff-base hicolor-icon-theme iamerican ibritish ienglish-common info \
+	installation-report install-info ispell kbd keyboard-configuration \
+	krb5-locales laptop-detect less libalgorithm-c3-perl libarchive-extract-perl \
+	libassuan0:amd64 libatk1.0-0:amd64 libatk1.0-data libauthen-sasl-perl \
+	libavahi-client3:amd64 libavahi-common3:amd64 libavahi-common-data:amd64 \
+	libcairo2:amd64 libcgi-fast-perl libcgi-pm-perl libclass-accessor-perl \
+	libclass-c3-perl libclass-c3-xs-perl libclass-isa-perl libcpan-meta-perl \
+	libcups2:amd64 libcurl3:amd64 libcurl3-gnutls:amd64 libdata-optlist-perl \
+	libdata-section-perl libdatrie1:amd64 libencode-locale-perl libevent-2.0-5:amd64 \
+	libfcgi-perl libfile-listing-perl libfont-afm-perl libfontconfig1:amd64 \
+	libgc1c2:amd64 libgdk-pixbuf2.0-0:amd64 libgdk-pixbuf2.0-common \
+	libglib2.0-0:amd64 libglib2.0-data libgpgme11:amd64 libgraphite2-3:amd64 \
+	libgtk2.0-0:amd64 libgtk2.0-bin libgtk2.0-common libharfbuzz0b:amd64 \
+	libhtml-format-perl libhtml-form-perl libhtml-parser-perl libhtml-tagset-perl \
+	libhtml-tree-perl libhttp-cookies-perl libhttp-daemon-perl libhttp-date-perl \
+	libhttp-message-perl libhttp-negotiate-perl libintl-perl libio-html-perl \
+	libio-socket-ip-perl libio-socket-ssl-perl libio-string-perl libjasper1:amd64 \
+	libjbig0:amd64 libjpeg62-turbo:amd64 libksba8:amd64 liblcms2-2:amd64 \
+	liblocale-gettext-perl liblog-message-perl liblog-message-simple-perl \
+	liblwp-mediatypes-perl liblwp-protocol-https-perl libmagic1:amd64 \
+	libmailtools-perl libmodule-build-perl libmodule-pluggable-perl \
+	libmodule-signature-perl libmpdec2:amd64 libmro-compat-perl libnet1:amd64 \
+	libnet-http-perl libnet-smtp-ssl-perl libnet-ssleay-perl libnfsidmap2:amd64 \
+	libpackage-constants-perl libpango-1.0-0:amd64 libpangocairo-1.0-0:amd64 \
+	libpangoft2-1.0-0:amd64 libpaper1:amd64 libpaper-utils libparams-util-perl \
+	libparse-debianchangelog-perl libpcap0.8:amd64 libperl4-corelibs-perl \
+	libpixman-1-0:amd64 libpod-latex-perl libpod-readme-perl libpth20:amd64 \
+	libpython3.4-minimal:amd64 libpython3.4-stdlib:amd64 libpython3-stdlib:amd64 \
+	libregexp-common-perl librtmp1:amd64 libsigsegv2:amd64 libsoftware-license-perl \
+	libssh2-1:amd64 libsub-exporter-perl libsub-install-perl libsub-name-perl \
+	libswitch-perl libterm-ui-perl libtext-charwidth-perl libtext-iconv-perl \
+	libtext-soundex-perl libtext-template-perl libtext-unidecode-perl \
+	libtext-wrapi18n-perl libthai0:amd64 libthai-data libtiff5:amd64 \
+	libtimedate-perl libtirpc1:amd64 libtokyocabinet9:amd64 liburi-perl \
+	libwebp5:amd64 libwebpdemux1:amd64 libwebpmux1:amd64 libwww-perl \
+	libwww-robotrules-perl libx11-6:amd64 libx11-data libxau6:amd64 libxcb1:amd64 \
+	libxcb-render0:amd64 libxcb-shm0:amd64 libxcomposite1:amd64 libxcursor1:amd64 \
+	libxdamage1:amd64 libxdmcp6:amd64 libxext6:amd64 libxfixes3:amd64 libxi6:amd64 \
+	libxinerama1:amd64 libxml-libxml-perl libxml-namespacesupport-perl \
+	libxml-parser-perl libxml-sax-base-perl libxml-sax-expat-perl libxml-sax-perl \
+	libxmuu1:amd64 libxrandr2:amd64 libxrender1:amd64 libxslt1.1:amd64 lsof m4 \
+	man-db manpages mlocate mutt nano netcat-traditional nfs-common opensc \
+	opensc-pkcs11:amd64 os-prober patch perl perl-modules pinentry-gtk2 python3-apt \
+	python-boto python-cffi python-chardet python-cheetah python-configobj \
+	python-cryptography python-debian python-debianbts python-defusedxml \
+	python-distro-info python-docutils python-ecdsa python-jsonpatch python-json-pointer \
+	python-lxml python-ndg-httpsclient python-oauth python-openssl python-paramiko \
+	python-pil:amd64 python-ply python-prettytable python-pyasn1 python-pycparser \
+	python-pygments python-reportbug python-requestbuilder python-requests \
+	python-roman python-serial python-six python-soappy python-software-properties \
+	python-urllib3 python-wstools rename reportbug rpcbind sgml-base \
+	shared-mime-info task-english tasksel tasksel-data task-ssh-server telnet \
+	texinfo time traceroute unattended-upgrades util-linux-locales vim-tiny w3m \
+	wamerican wget whois xauth xdg-user-dirs xkb-data xml-core dbus libdbus-1-3
+
+apt-get -y dist-upgrade
+
+
+##
+# Salt
+##
+
+# Minion identity
+mkdir -p /etc/salt/pki/minion
+chmod 700 /etc/salt/pki/minion
+mv "$(basename $0)"/minion.pem /etc/salt/pki/minion/minion.pem
+mv "$(basename $0)"/minion.pub /etc/salt/pki/minion/minion.pub
+mv "$(basename $0)"/minion_id /etc/salt/minion_id
+rm -f /etc/salt/minion_id
+
+# Requisite packages
+#   Note: Ensure keys are in place prior to installation
+apt-get install -y salt-minion
+
+##
+# Services
+##
+
+# Probably already installed, but let's not assume
+apt-get install -y at
+
+echo 'Running highstate and starting salt-minion [delay: 1 minute]...'
+at now + 1 minute <<<'salt-call -l debug state.highstate'

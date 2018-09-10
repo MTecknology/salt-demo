@@ -1,0 +1,44 @@
+source mlustfield {
+	type = xmlpipe2
+	xmlpipe_command = cat /srv/webapps/mlustfield-output/sphinxsearch.xml
+	xmlpipe_fixup_utf8 = 1
+	xmlpipe_field = content
+	xmlpipe_attr_string = title
+	xmlpipe_attr_string = author
+	xmlpipe_attr_string = url
+	xmlpipe_attr_multi = category
+	xmlpipe_attr_string = summary
+	xmlpipe_attr_string = slug
+	xmlpipe_attr_timestamp = published
+}
+
+index mlustfield {
+	type = plain
+	source = mlustfield
+	path = /var/lib/sphinxsearch/data/mlustfield
+	mlock = 1
+	expand_keywords = 1
+	phrase_boundary = ., ?, !, U+2026 # horizontal ellipsis
+	html_strip = 0
+	preopen = 1
+	# ondisk_dict = 1
+}
+
+indexer {
+	mem_limit = 64M
+	# max_xmlpipe2_field = 4M
+	# on_file_field_error = skip_document
+}
+
+searchd {
+	#listen = /var/run/searchd.sock
+	listen = 9312
+	listen = 9306:mysql41
+	log = /var/log/sphinxsearch/searchd.log
+	query_log = /var/log/sphinxsearch/query.log
+	read_timeout = 5
+	client_timeout = 300
+	max_children = 30
+	pid_file = /var/run/sphinxsearch/searchd.pid
+	workers = threads
+}
