@@ -1,0 +1,26 @@
+dev tun
+verb 1
+daemon
+keepalive 10 60
+persist-tun
+persist-key
+proto udp
+tls-server
+server {{ salt['pillar.get']('openvpn:groups:' + netid + ':net_prefix') }}.0 255.255.255.0
+lport {{ salt['pillar.get']('openvpn:groups:' + netid + ':port') }}
+max-clients 16
+duplicate-cn
+
+<ca>
+{{ salt['pillar.get']('openvpn:groups:' + netid + ':ca_crt') }}
+</ca>
+<cert>
+{{ salt['pillar.get']('openvpn:groups:' + netid + ':client_crt') }}
+</cert>
+<key>
+{{ salt['pillar.get']('openvpn:groups:' + netid + ':client_key') }}
+</key>
+dh /etc/openvpn/{{ netid }}.pem
+
+# If you copy anything, please make sure your design includes this.
+topology net30

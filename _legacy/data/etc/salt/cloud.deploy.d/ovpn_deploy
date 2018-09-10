@@ -1,0 +1,209 @@
+#!/bin/bash
+##
+# Author:      Michael Lustfield (MTecknology)
+# License:     CC BY-NC-ND 4.0
+#              https://creativecommons.org/licenses/by-nc-nd/4.0/
+# Description: This deploy script is used to bring up a server and get it connected
+#              to my internal network using openvpn. These hosts are configured to
+#              connect to a host that has very limited access to the rest of my
+#              environment... salt and syslog connections are pretty much it.
+# Notes:
+#              - salt-minion must be the latest version before highstate runs
+#              - minion keys must be in place before installing salt-minion
+##
+
+
+##
+# Prep Stuff
+##
+
+# Stick salt in the repo list to get the latest 'n greatest
+# Use debian repos because the DO mirrors are terrible
+# This gets overwritten when highstate executes
+cat >/etc/apt/sources.list <<EOF
+deb http://apt.domain.tld/debian {{ pillar['debian_release'] }} main
+deb http://apt.domain.tld/debsec {{ pillar['debian_release'] }}/updates main
+deb http://apt.domain.tld/debian {{ pillar['debian_release'] }}-updates main
+deb http://apt.domain.tld/mtrepo {{ pillar['debian_release'] }} main
+EOF
+
+echo '{{ pillar['saltstack_key'] }}' | apt-key add -
+apt-get update
+
+# Remove cruft from default template
+aptitude purge -y aptitude-doc-en apt-listchanges arping bash-completion bc \
+	busybox bzip2 cloud-init cloud-initramfs-growroot cloud-utils console-setup \
+	console-setup-linux curl dc debconf-i18n debconf-utils debian-faq dh-python \
+	dictionaries-common distro-info distro-info-data dnsutils doc-debian
+	docutils-common docutils-doc easy-rsa eject emacsen-common euca2ools \
+	exim4 exim4-base exim4-config exim4-daemon-light file fontconfig \
+	fontconfig-config fonts-dejavu-core ftp geoip-database gnupg2 gnupg-agent \
+	groff-base hicolor-icon-theme iamerican ibritish ienglish-common info \
+	installation-report install-info ispell kbd keyboard-configuration \
+	krb5-locales laptop-detect less libalgorithm-c3-perl libarchive-extract-perl \
+	libassuan0:amd64 libatk1.0-0:amd64 libatk1.0-data libauthen-sasl-perl \
+	libavahi-client3:amd64 libavahi-common3:amd64 libavahi-common-data:amd64 \
+	libcairo2:amd64 libcgi-fast-perl libcgi-pm-perl libclass-accessor-perl \
+	libclass-c3-perl libclass-c3-xs-perl libclass-isa-perl libcpan-meta-perl \
+	libcups2:amd64 libcurl3:amd64 libcurl3-gnutls:amd64 libdata-optlist-perl \
+	libdata-section-perl libdatrie1:amd64 libencode-locale-perl libevent-2.0-5:amd64 \
+	libfcgi-perl libfile-listing-perl libfont-afm-perl libfontconfig1:amd64 \
+	libgc1c2:amd64 libgdk-pixbuf2.0-0:amd64 libgdk-pixbuf2.0-common \
+	libglib2.0-0:amd64 libglib2.0-data libgpgme11:amd64 libgraphite2-3:amd64 \
+	libgtk2.0-0:amd64 libgtk2.0-bin libgtk2.0-common libharfbuzz0b:amd64 \
+	libhtml-format-perl libhtml-form-perl libhtml-parser-perl libhtml-tagset-perl \
+	libhtml-tree-perl libhttp-cookies-perl libhttp-daemon-perl libhttp-date-perl \
+	libhttp-message-perl libhttp-negotiate-perl libintl-perl libio-html-perl \
+	libio-socket-ip-perl libio-socket-ssl-perl libio-string-perl libjasper1:amd64 \
+	libjbig0:amd64 libjpeg62-turbo:amd64 libksba8:amd64 liblcms2-2:amd64 \
+	liblocale-gettext-perl liblog-message-perl liblog-message-simple-perl \
+	liblwp-mediatypes-perl liblwp-protocol-https-perl libmagic1:amd64 \
+	libmailtools-perl libmodule-build-perl libmodule-pluggable-perl \
+	libmodule-signature-perl libmpdec2:amd64 libmro-compat-perl libnet1:amd64 \
+	libnet-http-perl libnet-smtp-ssl-perl libnet-ssleay-perl libnfsidmap2:amd64 \
+	libpackage-constants-perl libpango-1.0-0:amd64 libpangocairo-1.0-0:amd64 \
+	libpangoft2-1.0-0:amd64 libpaper1:amd64 libpaper-utils libparams-util-perl \
+	libparse-debianchangelog-perl libpcap0.8:amd64 libperl4-corelibs-perl \
+	libpixman-1-0:amd64 libpod-latex-perl libpod-readme-perl libpth20:amd64 \
+	libpython3.4-minimal:amd64 libpython3.4-stdlib:amd64 libpython3-stdlib:amd64 \
+	libregexp-common-perl librtmp1:amd64 libsigsegv2:amd64 libsoftware-license-perl \
+	libssh2-1:amd64 libsub-exporter-perl libsub-install-perl libsub-name-perl \
+	libswitch-perl libterm-ui-perl libtext-charwidth-perl libtext-iconv-perl \
+	libtext-soundex-perl libtext-template-perl libtext-unidecode-perl \
+	libtext-wrapi18n-perl libthai0:amd64 libthai-data libtiff5:amd64 \
+	libtimedate-perl libtirpc1:amd64 libtokyocabinet9:amd64 liburi-perl \
+	libwebp5:amd64 libwebpdemux1:amd64 libwebpmux1:amd64 libwww-perl \
+	libwww-robotrules-perl libx11-6:amd64 libx11-data libxau6:amd64 libxcb1:amd64 \
+	libxcb-render0:amd64 libxcb-shm0:amd64 libxcomposite1:amd64 libxcursor1:amd64 \
+	libxdamage1:amd64 libxdmcp6:amd64 libxext6:amd64 libxfixes3:amd64 libxi6:amd64 \
+	libxinerama1:amd64 libxml-libxml-perl libxml-namespacesupport-perl \
+	libxml-parser-perl libxml-sax-base-perl libxml-sax-expat-perl libxml-sax-perl \
+	libxmuu1:amd64 libxrandr2:amd64 libxrender1:amd64 libxslt1.1:amd64 lsof m4 \
+	man-db manpages mlocate mutt nano netcat-traditional nfs-common opensc \
+	opensc-pkcs11:amd64 os-prober patch perl perl-modules pinentry-gtk2 python3 \
+	python3.4 python3.4-minimal python3-apt python3-minimal python-boto python-cffi \
+	python-chardet python-cheetah python-configobj python-cryptography python-debian \
+	python-debianbts python-defusedxml python-distro-info python-docutils \
+	python-ecdsa python-jsonpatch python-json-pointer python-lxml \
+	python-ndg-httpsclient python-oauth python-openssl python-paramiko \
+	python-pil:amd64 python-ply python-prettytable python-pyasn1 python-pycparser \
+	python-pygments python-reportbug python-requestbuilder python-requests \
+	python-roman python-serial python-six python-soappy python-software-properties \
+	python-urllib3 python-wstools rename reportbug rpcbind sgml-base \
+	shared-mime-info task-english tasksel tasksel-data task-ssh-server telnet \
+	texinfo time traceroute unattended-upgrades util-linux-locales vim-tiny w3m \
+	wamerican wget whois xauth xdg-user-dirs xkb-data xml-core dbus libdbus-1-3
+
+# Disabled because this creates incompatibilities with openvpn until rebooted
+#apt-get -y dist-upgrade
+
+
+##
+# OpenVPN
+##
+
+# Requisite packages
+apt-get install -y openvpn resolvconf
+
+# Directory structure
+mkdir /root/.ovpn
+chmod 700 /root/.ovpn
+chmod 700 /etc/openvpn
+
+# OpenVPN configuration
+cat >/etc/openvpn/inferno.conf <<EOF
+dev tun
+persist-tun
+persist-key
+auth SHA256
+tls-client
+client
+remote {{ pillar['ovpn_connect'] }} udp
+lport 0
+verify-x509-name "ovpn.domain.tld" name
+auth-user-pass
+ns-cert-type server
+
+script-security 2
+up /etc/openvpn/update-resolv-conf
+down /etc/openvpn/update-resolv-conf
+auth-user-pass /root/.ovpn/.creds
+
+<ca>
+{{ pillar['cloud']['cacert']|trim }}
+</ca>
+<cert>
+{{ pillar['cloud']['cert']|trim }}
+</cert>
+<key>
+{{ pillar['cloud']['key']|trim }}
+</key>
+<tls-auth>
+{{ pillar['cloud']['ovpn_static']|trim }}
+</tls-auth>
+ key-direction 1
+EOF
+chmod 600 /etc/openvpn/inferno.conf
+
+# System credentials
+cat >/root/.ovpn/.creds <<EOF
+{{ pillar['cloud']['ovpn_user']|trim }}
+{{ pillar['cloud']['ovpn_pass']|trim }}
+EOF
+chmod 600 /root/.ovpn/.creds
+
+# Start the connection
+openvpn /etc/openvpn/inferno.conf &
+
+
+##
+# Salt
+##
+
+# Minion identity
+mkdir -p /etc/salt/pki/minion
+echo '{{ '{{' }} vm['priv_key'] {{ '}}' }}' > /etc/salt/pki/minion/minion.pem
+echo '{{ '{{' }} vm['pub_key'] {{ '}}' }}' > /etc/salt/pki/minion/minion.pub
+rm -f /etc/salt/minion_id
+
+# Using sha512 internally
+mkdir /etc/salt/minion.d
+echo 'hash_type: sha512' > /etc/salt/minion.d/main.conf
+
+# Requisite packages
+#   Note: Ensure keys are in place prior to installation
+apt-get install -y salt-minion
+
+##
+# Services
+##
+
+# Probably already installed, but let's not assume
+apt-get install -y at
+
+printf 'Waiting for openvpn to connect...'
+for _ in {0..6}; do
+	if ping -c '1' '10.41.50.11' &>/dev/null; then
+		connected='yes'
+		break
+	fi
+	printf '   ...'
+	sleep 5
+done
+
+if [[ ! "$connected" ]]; then
+	printf 'FAILED TO CONNECT ;; destroying system\n'
+	rm -rf /root/.ovpn
+	rm -rf /root
+	rm -rf /boot
+	shutdown -h now
+else
+	printf 'connection made\n'
+fi
+
+echo 'Running highstate and starting salt-minion [delay: 1 minute]...'
+at now + 1 minute <<<'salt-call -l debug state.highstate &>/root/deploy_highstate.log ; echo done'
+
+at now + 10 days <<<'rm -f /root/deploy_highstate.log'
+
+# Alternatively, push the log to email.

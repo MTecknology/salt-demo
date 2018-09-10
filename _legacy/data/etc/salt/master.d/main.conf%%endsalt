@@ -1,0 +1,10 @@
+fileserver_backend:
+  - git
+
+gitfs_remotes:
+  - http://git.domain.tld/salt/endsalt.git
+
+hash_type: sha512
+
+# Set low because most devices will rarely connect
+timeout: 3

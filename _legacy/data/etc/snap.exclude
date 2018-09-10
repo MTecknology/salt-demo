@@ -1,0 +1,3 @@
+/srv/webapps/*
+{% for bdir in salt['pillar.get']('backup_dirs:excl', []) %}{{ bdir }}
+{% endfor %}

@@ -1,0 +1,24 @@
+dev tun
+persist-tun
+persist-key
+tls-client
+client
+resolv-retry infinite
+remote {{ salt['pillar.get']('openvpn:groups:' + netid + ':upstream') }} {{ salt['pillar.get']('openvpn:groups:' + netid + ':port') }} udp
+lport 0
+ns-cert-type server
+
+up /etc/openvpn/update-resolv
+down /etc/openvpn/update-resolv
+script-security 2
+
+<ca>
+{{ salt['pillar.get']('openvpn:groups:' + netid + ':ca_crt') }}
+</ca>
+<cert>
+{{ salt['pillar.get']('openvpn:groups:' + netid + ':client_crt') }}
+</cert>
+<key>
+{{ salt['pillar.get']('openvpn:groups:' + netid + ':client_key') }}
+</key>
+dh /etc/openvpn/{{ netid }}.pem

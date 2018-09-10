@@ -1,0 +1,37 @@
+# INIT
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ init: Trying to re-exec init$
+
+# KERNEL
+^\w{3} [ :[:digit:]]{11} [._[:alnum:]-]+ kernel: .* entered forwarding state$
+^\w{3} [ :[:digit:]]{11} [._[:alnum:]-]+ kernel: .* (entered|left) (disabled|promiscuous) (mode|state)$
+^\w{3} [ :[:digit:]]{11} [._[:alnum:]-]+ kernel: .* kvm: zapping shadow pages for mmio generation wraparound$
+
+# NTP
+^\w{3} [ :[:digit:]]{11} [._[:alnum:]-]+ kernel: \[[[:digit:]\.]+\] hpet1: lost [[:digit:]]+ rtc interrupts$
+
+# RSYSLOG
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ rsyslogd-2007: action.*$
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ rsyslogd-2359: action.*$
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ rsyslogd0: action.*$
+
+# SSH
+^\w{3} [ :[:digit:]]{11} [._[:alnum:]-]+ sshd\[[[:digit:]]+\]: Received signal 15; terminating.$
+^\w{3} [ :[:digit:]]{11} [._[:alnum:]-]+ sshd\[[[:digit:]]+\]: error: PAM: Cannot make/remove an entry for the specified session.*$
+
+# SSHGUARD
+^\w{3} [ :[:digit:]]{11} [._[:alnum:]-]+ sshguard\[[[:digit:]]+\]: Started successfully.*now ready to scan\.$
+^\w{3} [ :[:digit:]]{11} [._[:alnum:]-]+ sshguard\[[[:digit:]]+\]: Reloading rotated file.*$
+
+# SSMTP
+^\w{3} [ :[:digit:]]{11} [._[:alnum:]-]+ sSMTP\[[[:digit:]]+\]: Creating SSL connection to host$
+^\w{3} [ :[:digit:]]{11} [._[:alnum:]-]+ sSMTP\[[[:digit:]]+\]: SSL connection using.*$
+^\w{3} [ :[:digit:]]{11} [._[:alnum:]-]+ sSMTP\[[[:digit:]]+\]: Sent mail for.*$
+
+# SYSTEMDUMB
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ systemd\[[0-9]+\]:.*$
+
+# PROXMOX
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ pvestatd[[0-9]+\]: modified cpu set for lxc.*$
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ pvepw-logger[[0-9]+\]:.*$
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ pmxcfs[[0-9]+\]: \[dcdb\] notice: data verification successful$
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ pmxcfs[[0-9]+\]: \[status\] notice: received log$
