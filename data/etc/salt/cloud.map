@@ -1,1 +1,0 @@
-{{ salt.pillar.get('map_data', {})|yaml }}

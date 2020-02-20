@@ -1,4 +1,0 @@
-{% from 'sys/pkgs/snap/defaults.sls' import conf with context -%}
-**webapps/*
-{% for bdir in conf['excl'] %}{{ bdir }}
-{% endfor %}

@@ -1,1 +1,0 @@
-git ALL=(root:root) NOPASSWD:/usr/local/sbin/saltevent

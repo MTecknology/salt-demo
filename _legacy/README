@@ -1,6 +1,0 @@
-This is a very outdated version of my personal saltstack setup. Some things
-have been intentionally left out or broken because it is important to not
-blindly copy/paste random blobs found on the internet.
-
-There will be an update (or new repository) in the future to show a more
-robust and dynamic version of this salt setup that includes DCIM/IPAM.

@@ -1,3 +1,0 @@
-gitolite gitolite/gituser string git
-gitolite gitolite/gitdir string /var/lib/gitolite3
-gitolite gitolite/adminkey string FOO

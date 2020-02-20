@@ -1,1 +1,0 @@
-SUBSYSTEM=="usb", ATTR{idVendor}=="1410", ATTR{idProduct}=="9020", ATTR{bConfigurationValue}=="1", ATTR{bConfigurationValue}="2"

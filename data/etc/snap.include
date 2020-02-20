@@ -1,3 +1,0 @@
-{% from 'sys/pkgs/snap/defaults.sls' import conf with context -%}
-{% for bdir in conf['incl'] %}{{ bdir }}
-{% endfor %}

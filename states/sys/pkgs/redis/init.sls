@@ -1,2 +1,0 @@
-redis-server:
-  pkg.installed
